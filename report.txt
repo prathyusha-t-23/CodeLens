@@ -1,0 +1,15 @@
+
+FILE: test_files\sample.py
+----------------------------------------
+Pattern : TODO
+Line No : 1
+Code    : # TODO remove hardcoding
+
+Pattern : password
+Line No : 3
+Code    : password = "1234"
+
+Pattern : eval(
+Line No : 7
+Code    : eval(user_input)
+
