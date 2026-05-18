@@ -1,15 +1,124 @@
+╔══════════════════════════════════════════════╗
+║        CodeLens — Code Review Report         ║
+╚══════════════════════════════════════════════╝
 
-FILE: test_files\sample.py
+Generated     : Mon May 18 12:01:49 2026
+Files Scanned : 9
+
+Files:
+  [1] .\file_access.c
+  [2] .\file_access.h
+  [3] .\horspool.c
+  [4] .\horspool.h
+  [5] .\naive.c
+  [6] .\naive.h
+  [7] .\reviewer.c
+  [8] .\scanner.c
+  [9] .\scanner.h
+
+
+========================================
+FILE: .\file_access.c
+========================================
+
+  No violations found.
+
+========================================
+FILE: .\file_access.h
+========================================
+
+  No violations found.
+
+========================================
+FILE: .\horspool.c
+========================================
+
+  No violations found.
+
+========================================
+FILE: .\horspool.h
+========================================
+
+  No violations found.
+
+========================================
+FILE: .\naive.c
+========================================
+
+  No violations found.
+
+========================================
+FILE: .\naive.h
+========================================
+
+  No violations found.
+
+========================================
+FILE: .\reviewer.c
+========================================
+
+Violation Type : strcpy
+Line Number    : 130
+Matched Code   :         "    strcpy(buf, \"data\");",           /* banned */
 ----------------------------------------
-Pattern : TODO
-Line No : 1
-Code    : # TODO remove hardcoding
+Violation Type : TODO
+Line Number    : 131
+Matched Code   :         "    /* TODO: refactor this block */",  /* banned */
+----------------------------------------
+Violation Type : password
+Line Number    : 133
+Matched Code   :         "    char *password = \"hunter2\";",    /* banned */
+----------------------------------------
+Violation Type : goto
+Line Number    : 134
+Matched Code   :         "    goto cleanup;",                    /* banned */
+----------------------------------------
+Violation Type : eval(
+Line Number    : 135
+Matched Code   :         "    eval(userInput);",                 /* banned */
+----------------------------------------
 
-Pattern : password
-Line No : 3
-Code    : password = "1234"
+========================================
+FILE: .\scanner.c
+========================================
 
-Pattern : eval(
-Line No : 7
-Code    : eval(user_input)
+  No violations found.
 
+========================================
+FILE: .\scanner.h
+========================================
+
+  No violations found.
+
+======== PERFORMANCE BENCHMARK ========
+File    : test_files\large_file.c
+Pattern : "eval("
+Size    : 284309 bytes
+
+Algorithm              Matches    Time(ms)    
+Horspool               863        0.0000      
+Naive                  863        1.0000      
+========================================
+
+
+======== SIMILARITY SCORES ========
+20.5%  .\file_access.c  <->  .\file_access.h
+20.5%  .\file_access.c  <->  .\horspool.c
+5.8%  .\file_access.c  <->  .\horspool.h
+16.4%  .\file_access.c  <->  .\naive.c
+4.1%  .\file_access.c  <->  .\naive.h
+7.7%  .\file_access.h  <->  .\horspool.c
+12.9%  .\file_access.h  <->  .\horspool.h
+7.6%  .\file_access.h  <->  .\naive.c
+11.7%  .\file_access.h  <->  .\naive.h
+20.5%  .\horspool.c  <->  .\horspool.h
+45.2%  .\horspool.c  <->  .\naive.c
+11.5%  .\horspool.c  <->  .\naive.h
+16.7%  .\horspool.h  <->  .\naive.c
+48.7%  .\horspool.h  <->  .\naive.h
+22.1%  .\naive.c  <->  .\naive.h
+====================================
+
+╔══════════════════════════════════════════════╗
+║  Total Violations Found : 5                  ║
+╚══════════════════════════════════════════════╝
