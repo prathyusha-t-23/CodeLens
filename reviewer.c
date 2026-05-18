@@ -15,6 +15,7 @@
 #include "naive.h"
 #include "scanner.h"
 #include "file_access.h"
+#include "html_template.h"
 
 #define MAX_PATTERNS  50
 #define PATTERN_LEN   50
@@ -115,13 +116,13 @@ int collectFiles(const char *dir, char files[][FILE_LEN], int maxFiles)
 }
 
 /* ================================================================
-   Generate a 10 000-line benchmark file
+   Performance benchmark: Horspool vs Naive
+   Generates a 10,000-line dataset directly in memory to compare
+   Horspool vs. Naive algorithm performance on large datasets
+   without cluttering the disk.
    ================================================================ */
-void generateLargeFile(const char *path)
+void runBenchmark(const char *pat)
 {
-    FILE *fp = fopen(path, "w");
-    if (!fp) { printf("[!] Cannot create: %s\n", path); return; }
-
     const char *lines[] = {
         "    int x = 0;",
         "    char buf[256];",
@@ -138,37 +139,22 @@ void generateLargeFile(const char *path)
     };
     int n = (int)(sizeof(lines) / sizeof(lines[0]));
 
-    fprintf(fp, "/* Auto-generated benchmark file */\n");
-    fprintf(fp, "#include <stdio.h>\n#include <string.h>\n\n");
+    long capacity = 600000;
+    char *buf = (char *)malloc(capacity);
+    if (!buf) return;
+
+    buf[0] = '\0';
+    long offset = 0;
+    offset += snprintf(buf + offset, capacity - offset, "/* Auto-generated benchmark dataset */\n#include <stdio.h>\n#include <string.h>\n\n");
 
     for (int i = 0; i < 10000; i++)
     {
-        if (i % 15 == 0)  fprintf(fp, "void func_%d() {\n", i / 15);
-        fprintf(fp, "%s\n", lines[i % n]);
-        if (i % 15 == 14) fprintf(fp, "}\n\n");
+        if (i % 15 == 0)
+            offset += snprintf(buf + offset, capacity - offset, "void func_%d() {\n", i / 15);
+        offset += snprintf(buf + offset, capacity - offset, "%s\n", lines[i % n]);
+        if (i % 15 == 14)
+            offset += snprintf(buf + offset, capacity - offset, "}\n\n");
     }
-
-    fclose(fp);
-    printf("[+] Generated: %s (10 000+ lines)\n\n", path);
-}
-
-/* ================================================================
-   Performance benchmark: Horspool vs Naive
-   ================================================================ */
-void runBenchmark(const char *testFile, const char *pat)
-{
-    FILE *fp = fopen(testFile, "r");
-    if (!fp) { printf("[!] Benchmark file not found: %s\n", testFile); return; }
-
-    fseek(fp, 0, SEEK_END);
-    long fsize = ftell(fp);
-    rewind(fp);
-
-    char *buf = (char *)malloc(fsize + 1);
-    if (!buf) { fclose(fp); return; }
-    fread(buf, 1, fsize, fp);
-    buf[fsize] = '\0';
-    fclose(fp);
 
     int matches[2000];
 
@@ -184,7 +170,7 @@ void runBenchmark(const char *testFile, const char *pat)
     printf("\n  +-----------------------+---------------+---------------+\n");
     printf(  "  | Algorithm             | Matches Found | Time (ms)     |\n");
     printf(  "  +-----------------------+---------------+---------------+\n");
-    printf(  "  | Boyer-Moore-Horspool  | %-13d | %-13.4f |\n", hc, hms);
+    printf(  "  | Horspool              | %-13d | %-13.4f |\n", hc, hms);
     printf(  "  | Naive                 | %-13d | %-13.4f |\n", nc, nms);
     printf(  "  +-----------------------+---------------+---------------+\n");
 
@@ -198,9 +184,8 @@ void runBenchmark(const char *testFile, const char *pat)
     if (rep)
     {
         fprintf(rep, "\n======== PERFORMANCE BENCHMARK ========\n");
-        fprintf(rep, "File    : %s\n", testFile);
-        fprintf(rep, "Pattern : \"%s\"\n", pat);
-        fprintf(rep, "Size    : %ld bytes\n\n", fsize);
+        fprintf(rep, "Dataset Size : 10,000 lines (~%ld bytes in memory)\n", offset);
+        fprintf(rep, "Pattern      : \"%s\"\n\n", pat);
         fprintf(rep, "%-22s %-10s %-12s\n", "Algorithm", "Matches", "Time(ms)");
         fprintf(rep, "%-22s %-10d %-12.4f\n", "Horspool",  hc, hms);
         fprintf(rep, "%-22s %-10d %-12.4f\n", "Naive",     nc, nms);
@@ -321,23 +306,9 @@ int main(void)
     for (int i = 0; i < patternCount; i++)
         printShiftTable(patterns[i]);
 
-    /* --- 3. Generate large benchmark file if missing --- */
-    char largeFile[] = "test_files\\large_file.c";
-
-    struct stat st;
-    if (stat(largeFile, &st) != 0)
-    {
-#ifdef _WIN32
-        _mkdir("test_files");
-#else
-        mkdir("test_files", 0755);
-#endif
-        generateLargeFile(largeFile);
-    }
-
-    /* --- 4. Collect source files --- */
+    /* --- 4. Collect source files from test_files/ only --- */
     char files[MAX_FILES][FILE_LEN];
-    int  fileCount = collectFiles(".", files, MAX_FILES);
+    int  fileCount = collectFiles("test_files", files, MAX_FILES);
 
     printf("[+] Source files found: %d\n\n", fileCount);
 
@@ -395,34 +366,88 @@ int main(void)
 
     /* --- 9. Performance benchmark --- */
     printf("[+] Performance Benchmark (Horspool vs Naive on large file):\n");
-    runBenchmark(largeFile, patterns[0]);
+    runBenchmark(patterns[0]);
 
-    /* --- 10. Similarity score (bonus) --- */
-    if (fileCount >= 2)
+    /* --- 10. Similarity score (bonus) — compare only test_files/ --- */
     {
-        printf("[+] Copy-Paste Similarity Scores:\n\n");
+        char testDir[] = "test_files";
+        char tfiles[MAX_FILES][FILE_LEN];
+        int  tcount = collectFiles(testDir, tfiles, MAX_FILES);
+
+        printf("[+] Copy-Paste Similarity Scores (test_files only):\n\n");
+
         FILE *rep = fopen("report.txt", "a");
-        if (rep) { fprintf(rep, "\n======== SIMILARITY SCORES ========\n"); }
+        if (rep) fprintf(rep, "\n======== SIMILARITY SCORES (test_files) ========\n");
 
-        for (int i = 0; i < fileCount && i < 5; i++)
+        if (tcount < 2)
         {
-            for (int j = i+1; j < fileCount && j < 6; j++)
-            {
-                double score = similarityScore(files[i], files[j]);
-                if (score < 0) continue;
-                printf("  %s\n  %s\n  -> Similarity: %.1f%%\n\n",
-                       files[i], files[j], score);
-                if (rep)
-                    fprintf(rep, "%.1f%%  %s  <->  %s\n",
-                            score, files[i], files[j]);
-            }
+            printf("    (need at least 2 files in test_files/ to compare)\n\n");
+            if (rep) { fprintf(rep, "  Not enough files.\n"); fclose(rep); }
         }
+        else
+        {
+            for (int i = 0; i < tcount; i++)
+            {
+                for (int j = i+1; j < tcount; j++)
+                {
+                    double score = similarityScore(tfiles[i], tfiles[j]);
+                    if (score < 0) continue;
 
-        if (rep) { fprintf(rep, "====================================\n"); fclose(rep); }
+                    /* Extract basenames for cleaner display */
+                    char *n1 = strrchr(tfiles[i], '\\');
+                    char *n2 = strrchr(tfiles[j], '\\');
+                    if (!n1) n1 = strrchr(tfiles[i], '/');
+                    if (!n2) n2 = strrchr(tfiles[j], '/');
+                    n1 = n1 ? n1+1 : tfiles[i];
+                    n2 = n2 ? n2+1 : tfiles[j];
+
+                    const char *flag = (score >= 60.0) ? "  *** HIGH — possible copy-paste ***" : "";
+                    printf("  %-20s <-> %-20s  %.1f%%%s\n", n1, n2, score, flag);
+
+                    if (rep)
+                        fprintf(rep, "%.1f%%  %-20s  <->  %-20s%s\n",
+                                score, n1, n2, flag);
+                }
+            }
+            printf("\n");
+            if (rep) fprintf(rep, "=================================================\n");
+            if (rep) fclose(rep);
+        }
     }
 
     /* --- 11. Report footer --- */
     writeReportFooter(totalViolations);
+
+    /* --- 12. Generate HTML interactive dashboard from report.txt --- */
+    {
+        FILE *txt = fopen("report.txt", "r");
+        FILE *html = fopen("report.html", "w");
+        if (txt && html)
+        {
+            fprintf(html, "%s", HTML_TEMPLATE_PART_1);
+            char line[1024];
+            while (fgets(line, sizeof(line), txt))
+            {
+                for (int i = 0; line[i] != '\0'; i++)
+                {
+                    if (line[i] == '<') fprintf(html, "&lt;");
+                    else if (line[i] == '>') fprintf(html, "&gt;");
+                    else if (line[i] == '&') fprintf(html, "&amp;");
+                    else fputc(line[i], html);
+                }
+            }
+            fprintf(html, "%s", HTML_TEMPLATE_PART_2);
+            fclose(txt);
+            fclose(html);
+            printf("[+] Interactive dashboard written to report.html\n");
+        }
+        else
+        {
+            if (txt) fclose(txt);
+            if (html) fclose(html);
+            printf("[!] Failed to generate report.html\n");
+        }
+    }
 
     printf("[+] Report written to report.txt\n");
     printf("\n╔══════════════════════════════════════════════╗\n");

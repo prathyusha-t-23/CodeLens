@@ -1,0 +1,17 @@
+// sample_b.c - Feature module B (copy-paste of A with minor changes)
+#include <stdio.h>
+#include <string.h>
+
+void handleInput(char *input) {
+    char buffer[256];
+    strcpy(buffer, input);   // banned: strcpy
+    printf("Handling: %s\n", buffer);
+    // TODO: sanitize input
+}
+
+int calculate(int a, int b) {
+    if (a < 0) goto fail;   // banned: goto
+    return a + b;
+fail:
+    return -1;
+}

@@ -2,123 +2,111 @@
 ║        CodeLens — Code Review Report         ║
 ╚══════════════════════════════════════════════╝
 
-Generated     : Mon May 18 12:01:49 2026
-Files Scanned : 9
+Generated     : Mon May 18 13:34:31 2026
+Files Scanned : 4
 
 Files:
-  [1] .\file_access.c
-  [2] .\file_access.h
-  [3] .\horspool.c
-  [4] .\horspool.h
-  [5] .\naive.c
-  [6] .\naive.h
-  [7] .\reviewer.c
-  [8] .\scanner.c
-  [9] .\scanner.h
+  [1] test_files\sample.py
+  [2] test_files\sample_a.c
+  [3] test_files\sample_b.c
+  [4] test_files\sample_c.c
 
 
 ========================================
-FILE: .\file_access.c
+FILE: test_files\sample.py
 ========================================
 
-  No violations found.
+Violation Type : TODO
+Line Number    : 1
+Matched Code   : # TODO remove hardcoding
+----------------------------------------
+Violation Type : password
+Line Number    : 3
+Matched Code   : password = "1234"
+----------------------------------------
+Violation Type : eval(
+Line Number    : 7
+Matched Code   : eval(user_input)
+----------------------------------------
 
 ========================================
-FILE: .\file_access.h
-========================================
-
-  No violations found.
-
-========================================
-FILE: .\horspool.c
-========================================
-
-  No violations found.
-
-========================================
-FILE: .\horspool.h
-========================================
-
-  No violations found.
-
-========================================
-FILE: .\naive.c
-========================================
-
-  No violations found.
-
-========================================
-FILE: .\naive.h
-========================================
-
-  No violations found.
-
-========================================
-FILE: .\reviewer.c
+FILE: test_files\sample_a.c
 ========================================
 
 Violation Type : strcpy
-Line Number    : 130
-Matched Code   :         "    strcpy(buf, \"data\");",           /* banned */
+Line Number    : 7
+Matched Code   :     strcpy(buffer, input);   // banned: strcpy
 ----------------------------------------
 Violation Type : TODO
-Line Number    : 131
-Matched Code   :         "    /* TODO: refactor this block */",  /* banned */
-----------------------------------------
-Violation Type : password
-Line Number    : 133
-Matched Code   :         "    char *password = \"hunter2\";",    /* banned */
+Line Number    : 9
+Matched Code   :     // TODO: add validation here
 ----------------------------------------
 Violation Type : goto
-Line Number    : 134
-Matched Code   :         "    goto cleanup;",                    /* banned */
+Line Number    : 13
+Matched Code   :     if (x < 0) goto error;  // banned: goto
+----------------------------------------
+
+========================================
+FILE: test_files\sample_b.c
+========================================
+
+Violation Type : strcpy
+Line Number    : 7
+Matched Code   :     strcpy(buffer, input);   // banned: strcpy
+----------------------------------------
+Violation Type : TODO
+Line Number    : 9
+Matched Code   :     // TODO: sanitize input
+----------------------------------------
+Violation Type : goto
+Line Number    : 13
+Matched Code   :     if (a < 0) goto fail;   // banned: goto
+----------------------------------------
+
+========================================
+FILE: test_files\sample_c.c
+========================================
+
+Violation Type : password
+Line Number    : 4
+Matched Code   : int login(char *user, char *password) {
+----------------------------------------
+Violation Type : password
+Line Number    : 5
+Matched Code   :     // TODO: replace hardcoded password
+----------------------------------------
+Violation Type : TODO
+Line Number    : 5
+Matched Code   :     // TODO: replace hardcoded password
+----------------------------------------
+Violation Type : password
+Line Number    : 6
+Matched Code   :     if (password == "admin123") {  // banned: password
 ----------------------------------------
 Violation Type : eval(
-Line Number    : 135
-Matched Code   :         "    eval(userInput);",                 /* banned */
+Line Number    : 13
+Matched Code   :     eval(cmd);  // banned: eval(
 ----------------------------------------
 
-========================================
-FILE: .\scanner.c
-========================================
-
-  No violations found.
-
-========================================
-FILE: .\scanner.h
-========================================
-
-  No violations found.
-
 ======== PERFORMANCE BENCHMARK ========
-File    : test_files\large_file.c
-Pattern : "eval("
-Size    : 284309 bytes
+Dataset Size : 10,000 lines (~272309 bytes in memory)
+Pattern      : "eval("
 
 Algorithm              Matches    Time(ms)    
-Horspool               863        0.0000      
-Naive                  863        1.0000      
+Horspool               833        1.0000      
+Naive                  833        1.0000      
 ========================================
 
 
-======== SIMILARITY SCORES ========
-20.5%  .\file_access.c  <->  .\file_access.h
-20.5%  .\file_access.c  <->  .\horspool.c
-5.8%  .\file_access.c  <->  .\horspool.h
-16.4%  .\file_access.c  <->  .\naive.c
-4.1%  .\file_access.c  <->  .\naive.h
-7.7%  .\file_access.h  <->  .\horspool.c
-12.9%  .\file_access.h  <->  .\horspool.h
-7.6%  .\file_access.h  <->  .\naive.c
-11.7%  .\file_access.h  <->  .\naive.h
-20.5%  .\horspool.c  <->  .\horspool.h
-45.2%  .\horspool.c  <->  .\naive.c
-11.5%  .\horspool.c  <->  .\naive.h
-16.7%  .\horspool.h  <->  .\naive.c
-48.7%  .\horspool.h  <->  .\naive.h
-22.1%  .\naive.c  <->  .\naive.h
-====================================
+======== SIMILARITY SCORES (test_files) ========
+4.2%  sample.py             <->  sample_a.c          
+4.2%  sample.py             <->  sample_b.c          
+9.6%  sample.py             <->  sample_c.c          
+53.0%  sample_a.c            <->  sample_b.c          
+26.9%  sample_a.c            <->  sample_c.c          
+26.1%  sample_b.c            <->  sample_c.c          
+=================================================
 
 ╔══════════════════════════════════════════════╗
-║  Total Violations Found : 5                  ║
+║  Total Violations Found : 14                 ║
 ╚══════════════════════════════════════════════╝

@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeLens — Review Report</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #08090e;
+            --card-bg: rgba(20, 21, 38, 0.6);
+            --border: rgba(255, 255, 255, 0.08);
+            --text-main: #f1f1f8;
+            --text-muted: #959bb4;
+            --primary: #8b5cf6;
+            --primary-glow: rgba(139, 92, 246, 0.25);
+            --secondary: #3b82f6;
+            --secondary-glow: rgba(59, 130, 246, 0.25);
+            --danger: #ef4444;
+            --danger-glow: rgba(239, 68, 68, 0.2);
+            --success: #10b981;
+            --success-glow: rgba(16, 185, 129, 0.2);
+            --warning: #f59e0b;
+        }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Outfit', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-image: 
+                radial-gradient(circle at 5% 5%, rgba(139, 92, 246, 0.06) 0%, transparent 35%),
+                radial-gradient(circle at 95% 95%, rgba(59, 130, 246, 0.06) 0%, transparent 35%);
+        }
+        header {
+            background: rgba(12, 13, 20, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .logo {
+            font-size: 1.35rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #c084fc, #6366f1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .logo-tag {
+            background: rgba(139, 92, 246, 0.12);
+            color: #c084fc;
+            font-size: 0.7rem;
+            padding: 0.15rem 0.45rem;
+            border-radius: 5px;
+            border: 1px solid rgba(139, 92, 246, 0.25);
+        }
+        .container {
+            max-width: 1280px;
+            margin: 1.5rem auto;
+            padding: 0 1.5rem;
+            width: 100%;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        /* Top Stats row */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .stat-value {
+            font-size: 1.85rem;
+            font-weight: 700;
+        }
+        .stat-value.primary { color: #c084fc; text-shadow: 0 0 8px rgba(192, 132, 252, 0.2); }
+        .stat-value.danger { color: var(--danger); text-shadow: 0 0 8px var(--danger-glow); }
+        .stat-value.success { color: var(--success); text-shadow: 0 0 8px var(--success-glow); }
+        
+        /* Main panels layout */
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+        @media (min-width: 992px) {
+            .main-layout { grid-template-columns: 2fr 1fr; }
+        }
+        
+        .panel {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+        .panel-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.75rem;
+            color: var(--text-main);
+        }
+        
+        /* File and Violation Display */
+        .file-section {
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.01);
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+        .file-header {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 0.75rem 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            font-size: 0.92rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .file-path {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .file-path::before { content: "📄"; }
+        .file-badge {
+            font-size: 0.75rem;
+            padding: 0.15rem 0.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+        .file-badge.danger {
+            background: rgba(239, 68, 68, 0.15);
+            color: #fca5a5;
+            border: 1px solid rgba(239, 68, 68, 0.25);
+        }
+        .file-badge.success {
+            background: rgba(16, 185, 129, 0.15);
+            color: #a7f3d0;
+            border: 1px solid rgba(16, 185, 129, 0.25);
+        }
+        .violation-list {
+            padding: 0.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        .violation-item {
+            background: rgba(0, 0, 0, 0.18);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            border-left: 3px solid var(--danger);
+            border-radius: 6px;
+            padding: 0.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+        .v-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+        .v-type {
+            color: #fda4af;
+            background: rgba(239, 68, 68, 0.1);
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+            border: 1px solid rgba(239, 68, 68, 0.15);
+        }
+        .v-code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82rem;
+            color: #f3f4f6;
+            background: #07070d;
+            padding: 0.5rem;
+            border-radius: 4px;
+            overflow-x: auto;
+            white-space: pre;
+            border: 1px solid rgba(255, 255, 255, 0.02);
+        }
+        
+        /* Selector & Shift Matrix */
+        select {
+            width: 100%;
+            padding: 0.65rem 0.85rem;
+            background: #0f101b;
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.9rem;
+            outline: none;
+            cursor: pointer;
+        }
+        select:focus { border-color: var(--primary); }
+        
+        .shift-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(65px, 1fr));
+            gap: 0.4rem;
+            margin-top: 0.5rem;
+        }
+        .shift-card {
+            background: rgba(255, 255, 255, 0.015);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.4rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.1rem;
+        }
+        .shift-char {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            color: #a78bfa;
+            font-size: 0.9rem;
+        }
+        .shift-val {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        
+        /* General widgets */
+        .sim-item {
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .sim-files { display: flex; align-items: center; gap: 0.4rem; }
+        .sim-val { color: var(--warning); font-weight: 700; }
+        .sim-val.safe { color: var(--success); }
+        
+        footer {
+            text-align: center;
+            padding: 1.5rem;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            border-top: 1px solid var(--border);
+            margin-top: auto;
+            background: rgba(10, 11, 18, 0.8);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            CodeLens <span class="logo-tag">Review Dashboard</span>
+        </div>
+        <div style="font-size:0.8rem; color:var(--text-muted);" id="header-time"></div>
+    </header>
+    
+    <div class="container">
+        <!-- Executive stats -->
+        <div class="stats-row">
+            <div class="stat-card">
+                <span class="stat-label">Scanned Files</span>
+                <span class="stat-value primary" id="metric-files">0</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Total Violations</span>
+                <span class="stat-value danger" id="metric-violations">0</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Horspool Matches</span>
+                <span class="stat-value success" id="metric-matches">0</span>
+            </div>
+        </div>
+        
+        <!-- Main Dashboard panels layout -->
+        <div class="main-layout">
+            <!-- Left panel: Code Scan Violations -->
+            <div class="panel">
+                <h3 class="panel-title">🔍 Code Review Scan Report</h3>
+                <div id="report-files-container"></div>
+            </div>
+            
+            <!-- Right panel: Algorithms & Shift Tables -->
+            <div style="display:flex; flex-direction:column; gap:1.5rem;">
+                <div class="panel">
+                    <h3 class="panel-title">📋 Horspool Shift Table</h3>
+                    <div>
+                        <select id="shift-selector" onchange="updateShiftDisplay()">
+                            <option value="">Select a pattern...</option>
+                        </select>
+                    </div>
+                    <div class="shift-grid" id="shift-table-grid">
+                        <div style="grid-column:1/-1; text-align:center; padding:1.5rem 0; color:var(--text-muted); font-size:0.85rem;">
+                            Select a pattern to view shifts.
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="panel">
+                    <h3 class="panel-title">👥 File Copy Duplications</h3>
+                    <div style="display:flex; flex-direction:column; gap:0.6rem;" id="similarity-container">
+                        <div style="text-align:center; padding:1rem 0; color:var(--text-muted); font-size:0.85rem;">
+                            No copy data.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        CodeLens Interactive Scan Dashboard • Generated via Boyer-Moore-Horspool Engine
+    </footer>
+    
+    <pre id="raw-report-data" style="display:none;">
+╔══════════════════════════════════════════════╗
+║        CodeLens — Code Review Report         ║
+╚══════════════════════════════════════════════╝
+
+Generated     : Mon May 18 13:34:31 2026
+Files Scanned : 4
+
+Files:
+  [1] test_files\sample.py
+  [2] test_files\sample_a.c
+  [3] test_files\sample_b.c
+  [4] test_files\sample_c.c
+
+
+========================================
+FILE: test_files\sample.py
+========================================
+
+Violation Type : TODO
+Line Number    : 1
+Matched Code   : # TODO remove hardcoding
+----------------------------------------
+Violation Type : password
+Line Number    : 3
+Matched Code   : password = "1234"
+----------------------------------------
+Violation Type : eval(
+Line Number    : 7
+Matched Code   : eval(user_input)
+----------------------------------------
+
+========================================
+FILE: test_files\sample_a.c
+========================================
+
+Violation Type : strcpy
+Line Number    : 7
+Matched Code   :     strcpy(buffer, input);   // banned: strcpy
+----------------------------------------
+Violation Type : TODO
+Line Number    : 9
+Matched Code   :     // TODO: add validation here
+----------------------------------------
+Violation Type : goto
+Line Number    : 13
+Matched Code   :     if (x &lt; 0) goto error;  // banned: goto
+----------------------------------------
+
+========================================
+FILE: test_files\sample_b.c
+========================================
+
+Violation Type : strcpy
+Line Number    : 7
+Matched Code   :     strcpy(buffer, input);   // banned: strcpy
+----------------------------------------
+Violation Type : TODO
+Line Number    : 9
+Matched Code   :     // TODO: sanitize input
+----------------------------------------
+Violation Type : goto
+Line Number    : 13
+Matched Code   :     if (a &lt; 0) goto fail;   // banned: goto
+----------------------------------------
+
+========================================
+FILE: test_files\sample_c.c
+========================================
+
+Violation Type : password
+Line Number    : 4
+Matched Code   : int login(char *user, char *password) {
+----------------------------------------
+Violation Type : password
+Line Number    : 5
+Matched Code   :     // TODO: replace hardcoded password
+----------------------------------------
+Violation Type : TODO
+Line Number    : 5
+Matched Code   :     // TODO: replace hardcoded password
+----------------------------------------
+Violation Type : password
+Line Number    : 6
+Matched Code   :     if (password == "admin123") {  // banned: password
+----------------------------------------
+Violation Type : eval(
+Line Number    : 13
+Matched Code   :     eval(cmd);  // banned: eval(
+----------------------------------------
+
+======== PERFORMANCE BENCHMARK ========
+Dataset Size : 10,000 lines (~272309 bytes in memory)
+Pattern      : "eval("
+
+Algorithm              Matches    Time(ms)    
+Horspool               833        1.0000      
+Naive                  833        1.0000      
+========================================
+
+
+======== SIMILARITY SCORES (test_files) ========
+4.2%  sample.py             &lt;-&gt;  sample_a.c          
+4.2%  sample.py             &lt;-&gt;  sample_b.c          
+9.6%  sample.py             &lt;-&gt;  sample_c.c          
+53.0%  sample_a.c            &lt;-&gt;  sample_b.c          
+26.9%  sample_a.c            &lt;-&gt;  sample_c.c          
+26.1%  sample_b.c            &lt;-&gt;  sample_c.c          
+=================================================
+
+╔══════════════════════════════════════════════╗
+║  Total Violations Found : 14                 ║
+╚══════════════════════════════════════════════╝
+    </pre>
+    
+    <script>
+        let files = [];
+        let fileViolations = {};
+        let benchmark = { horspoolTime: 0.0, naiveTime: 0.0, matches: 0 };
+        let similarities = [];
+        let shiftTables = {};
+        
+        function parseReport() {
+            const raw = document.getElementById('raw-report-data').textContent.trim();
+            
+            // 1. Generation date
+            const dateMatch = raw.match(/Generated\s*:\s*(.*)/);
+            if (dateMatch) {
+                document.getElementById('header-time').textContent = "Generated: " + dateMatch[1].trim();
+            }
+            
+            // 2. Scan list
+            const filesMatch = raw.match(/Files:\n([\s\S]*?)\n\n/);
+            if (filesMatch) {
+                const lines = filesMatch[1].trim().split('\n');
+                lines.forEach(line => {
+                    const m = line.match(/\[\d+\]\s*(.*)/);
+                    if (m) files.push(m[1].trim());
+                });
+            }
+            
+            // 3. Scan violations blocks
+            const fileBlocks = raw.split(/={40}\nFILE:\s*/);
+            fileBlocks.slice(1).forEach(block => {
+                const lines = block.split('\n');
+                const filename = lines[0].trim().replace(/={40}/, '').trim();
+                
+                fileViolations[filename] = [];
+                
+                const violationsText = block.split(/\-{40}/);
+                violationsText.forEach(vText => {
+                    const typeMatch = vText.match(/Violation Type\s*:\s*(.*)/);
+                    const lineMatch = vText.match(/Line Number\s*:\s*(\d+)/);
+                    const codeMatch = vText.match(/Matched Code\s*:\s*(.*)/);
+                    
+                    if (typeMatch && lineMatch) {
+                        fileViolations[filename].push({
+                            type: typeMatch[1].trim(),
+                            line: parseInt(lineMatch[1].trim()),
+                            code: codeMatch ? codeMatch[1].trim() : ""
+                        });
+                    }
+                });
+            });
+            
+            // Ensure all files are in list
+            files.forEach(f => {
+                if (!fileViolations[f]) fileViolations[f] = [];
+            });
+            
+            // 4. Benchmark
+            const benchSection = raw.match(/={8} PERFORMANCE BENCHMARK ={8}\n([\s\S]*?)(?=={8})/);
+            if (benchSection) {
+                const bText = benchSection[1];
+                const horspoolLine = bText.match(/Horspool\s+(\d+)\s+([\d.]+)/);
+                if (horspoolLine) {
+                    benchmark.matches = parseInt(horspoolLine[1]);
+                }
+            }
+            
+            // 5. Similarity
+            const simSection = raw.match(/={8} SIMILARITY SCORES \(test_files\) ={8}\n([\s\S]*?)(?=={8})/);
+            if (simSection) {
+                const lines = simSection[1].trim().split('\n');
+                lines.forEach(line => {
+                    const m = line.trim().match(/([\d.]+)%\s+(.*?)\s+<->\s+(.*)/);
+                    if (m) {
+                        similarities.push({
+                            score: parseFloat(m[1]),
+                            file1: m[2].trim(),
+                            file2: m[3].trim()
+                        });
+                    }
+                });
+            }
+            
+            // Reconstruct BM-Horspool shift tables locally in Javascript
+            const patterns = ["eval(", "goto", "password", "TODO", "strcpy"];
+            patterns.forEach(pat => {
+                shiftTables[pat] = {};
+                let m = pat.length;
+                for (let i = 0; i < 256; i++) {
+                    shiftTables[pat][String.fromCharCode(i)] = m;
+                }
+                for (let i = 0; i < m - 1; i++) {
+                    shiftTables[pat][pat[i]] = m - 1 - i;
+                }
+            });
+        }
+        
+        function render() {
+            // Render stats
+            document.getElementById('metric-files').textContent = files.length;
+            let vTotal = 0;
+            Object.keys(fileViolations).forEach(k => vTotal += fileViolations[k].length);
+            document.getElementById('metric-violations').textContent = vTotal;
+            document.getElementById('metric-matches').textContent = benchmark.matches || 0;
+            
+            // Render reports list
+            const repContainer = document.getElementById('report-files-container');
+            repContainer.innerHTML = "";
+            
+            files.forEach(f => {
+                const fileSec = document.createElement('div');
+                fileSec.className = "file-section";
+                
+                const basename = f.split(/\\|\//).pop();
+                const violations = fileViolations[f] || [];
+                const count = violations.length;
+                
+                const badgeClass = count > 0 ? "danger" : "success";
+                const badgeText = count > 0 ? count + " violations" : "Clean";
+                
+                let listHtml = "";
+                if (count === 0) {
+                    listHtml = `<div style="padding:1rem; text-align:center; color:var(--success); font-size:0.85rem; font-weight:600;">✨ File is clean! No matches found.</div>`;
+                } else {
+                    listHtml = `<div class="violation-list">`;
+                    violations.forEach(v => {
+                        listHtml += `
+                            <div class="violation-item">
+                                <div class="v-meta">
+                                    <span class="v-type">Pattern: ${v.type}</span>
+                                    <span>Line ${v.line}</span>
+                                </div>
+                                <div class="v-code">${escapeHtml(v.code)}</div>
+                            </div>
+                        `;
+                    });
+                    listHtml += `</div>`;
+                }
+                
+                fileSec.innerHTML = `
+                    <div class="file-header">
+                        <span class="file-path">${basename}</span>
+                        <span class="file-badge ${badgeClass}">${badgeText}</span>
+                    </div>
+                    ${listHtml}
+                `;
+                repContainer.appendChild(fileSec);
+            });
+            
+            // Populate Shift Table dropdown selector
+            const selector = document.getElementById('shift-selector');
+            selector.innerHTML = `<option value="">Select a pattern...</option>`;
+            Object.keys(shiftTables).forEach(pat => {
+                const opt = document.createElement('option');
+                opt.value = pat;
+                opt.textContent = `"${pat}"`;
+                selector.appendChild(opt);
+            });
+            
+            // Render Copy Paste duplications list
+            const simContainer = document.getElementById('similarity-container');
+            simContainer.innerHTML = "";
+            if (similarities.length === 0) {
+                simContainer.innerHTML = `<div style="text-align:center; color:var(--text-muted); font-size:0.85rem;">No comparisons.</div>`;
+            } else {
+                similarities.forEach(s => {
+                    const item = document.createElement('div');
+                    item.className = "sim-item";
+                    const isHigh = s.score >= 50.0;
+                    item.innerHTML = `
+                        <div class="sim-files">
+                            <span>📄 ${s.file1.split(/\\|\//).pop()}</span>
+                            <span style="color:var(--text-muted);">↔</span>
+                            <span>📄 ${s.file2.split(/\\|\//).pop()}</span>
+                        </div>
+                        <span class="sim-val ${!isHigh ? 'safe' : ''}">${s.score}%</span>
+                    `;
+                    simContainer.appendChild(item);
+                });
+            }
+        }
+        
+        function updateShiftDisplay() {
+            const pat = document.getElementById('shift-selector').value;
+            const grid = document.getElementById('shift-table-grid');
+            grid.innerHTML = "";
+            
+            if (!pat) {
+                grid.innerHTML = `
+                    <div style="grid-column:1/-1; text-align:center; padding:1.5rem 0; color:var(--text-muted); font-size:0.85rem;">
+                        Select a pattern to view shifts.
+                    </div>
+                `;
+                return;
+            }
+            
+            const shifts = shiftTables[pat];
+            let foundCount = 0;
+            for (let i = 32; i < 127; i++) {
+                const char = String.fromCharCode(i);
+                const shift = shifts[char];
+                if (shift !== pat.length) {
+                    foundCount++;
+                    const card = document.createElement('div');
+                    card.className = "shift-card";
+                    card.innerHTML = `
+                        <span class="shift-char">'${char}'</span>
+                        <span class="shift-val">shift: ${shift}</span>
+                    `;
+                    grid.appendChild(card);
+                }
+            }
+            
+            if (foundCount === 0) {
+                grid.innerHTML = `
+                    <div style="grid-column:1/-1; text-align:center; padding:1.5rem 0; color:var(--text-muted); font-size:0.85rem;">
+                        All characters default to shift size: ${pat.length}
+                    </div>
+                `;
+            }
+        }
+        
+        function escapeHtml(text) {
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;");
+        }
+        
+        window.onload = function() {
+            parseReport();
+            render();
+        };
+    </script>
+</body>
+</html>
