@@ -2,23 +2,45 @@
 ║        CodeLens — Code Review Report         ║
 ╚══════════════════════════════════════════════╝
 
-Generated     : Mon May 18 13:34:31 2026
-Files Scanned : 4
+Generated     : Mon May 18 15:01:44 2026
+Files Scanned : 5
 
 Files:
-  [1] test_files\sample.py
-  [2] test_files\sample_a.c
-  [3] test_files\sample_b.c
-  [4] test_files\sample_c.c
+  [1] test_files\performance_dataset.c
+  [2] test_files\sample.py
+  [3] test_files\sample_a.c
+  [4] test_files\sample_b.c
+  [5] test_files\sample_c.c
 
+
+========================================
+FILE: test_files\performance_dataset.c
+========================================
+
+Search Times Comparison:
+  Boyer-Moore-Horspool: 230.0000 ms
+  Brute-Force Naive   : 554.0000 ms
+
+Violation Type : TODO
+Line Number    : 3003
+Matched Code   :     // TODO: add real logic here
+----------------------------------------
+Violation Type : strcpy
+Line Number    : 3005
+Matched Code   :     strcpy(buf, "test");
+----------------------------------------
 
 ========================================
 FILE: test_files\sample.py
 ========================================
 
+Search Times Comparison:
+  Boyer-Moore-Horspool: 842.0000 ms
+  Brute-Force Naive   : 2045.0000 ms
+
 Violation Type : TODO
 Line Number    : 1
-Matched Code   : # TODO remove hardcoding
+Matched Code   : ﻿# TODO remove hardcoding
 ----------------------------------------
 Violation Type : password
 Line Number    : 3
@@ -32,6 +54,10 @@ Matched Code   : eval(user_input)
 ========================================
 FILE: test_files\sample_a.c
 ========================================
+
+Search Times Comparison:
+  Boyer-Moore-Horspool: 825.0000 ms
+  Brute-Force Naive   : 2091.0000 ms
 
 Violation Type : strcpy
 Line Number    : 7
@@ -50,6 +76,10 @@ Matched Code   :     if (x < 0) goto error;  // banned: goto
 FILE: test_files\sample_b.c
 ========================================
 
+Search Times Comparison:
+  Boyer-Moore-Horspool: 841.0000 ms
+  Brute-Force Naive   : 1945.0000 ms
+
 Violation Type : strcpy
 Line Number    : 7
 Matched Code   :     strcpy(buffer, input);   // banned: strcpy
@@ -66,6 +96,10 @@ Matched Code   :     if (a < 0) goto fail;   // banned: goto
 ========================================
 FILE: test_files\sample_c.c
 ========================================
+
+Search Times Comparison:
+  Boyer-Moore-Horspool: 597.0000 ms
+  Brute-Force Naive   : 1378.0000 ms
 
 Violation Type : password
 Line Number    : 4
@@ -94,19 +128,23 @@ Pattern      : "eval("
 
 Algorithm              Matches    Time(ms)    
 Horspool               833        1.0000      
-Naive                  833        1.0000      
+Naive                  833        0.0000      
 ========================================
 
 
 ======== SIMILARITY SCORES (test_files) ========
-4.2%  sample.py             <->  sample_a.c          
-4.2%  sample.py             <->  sample_b.c          
-9.6%  sample.py             <->  sample_c.c          
-53.0%  sample_a.c            <->  sample_b.c          
-26.9%  sample_a.c            <->  sample_c.c          
-26.1%  sample_b.c            <->  sample_c.c          
+6.5%  performance_dataset.c  <->  sample.py           
+10.5%  performance_dataset.c  <->  sample_a.c          
+9.8%  performance_dataset.c  <->  sample_b.c          
+9.0%  performance_dataset.c  <->  sample_c.c          
+28.1%  sample.py             <->  sample_a.c          
+26.6%  sample.py             <->  sample_b.c          
+32.8%  sample.py             <->  sample_c.c          
+63.3%  sample_a.c            <->  sample_b.c            *** HIGH — possible copy-paste ***
+47.2%  sample_a.c            <->  sample_c.c          
+42.5%  sample_b.c            <->  sample_c.c          
 =================================================
 
 ╔══════════════════════════════════════════════╗
-║  Total Violations Found : 14                 ║
+║  Total Violations Found : 16                 ║
 ╚══════════════════════════════════════════════╝

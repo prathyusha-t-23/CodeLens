@@ -359,23 +359,45 @@
 ║        CodeLens — Code Review Report         ║
 ╚══════════════════════════════════════════════╝
 
-Generated     : Mon May 18 13:34:31 2026
-Files Scanned : 4
+Generated     : Mon May 18 15:01:44 2026
+Files Scanned : 5
 
 Files:
-  [1] test_files\sample.py
-  [2] test_files\sample_a.c
-  [3] test_files\sample_b.c
-  [4] test_files\sample_c.c
+  [1] test_files\performance_dataset.c
+  [2] test_files\sample.py
+  [3] test_files\sample_a.c
+  [4] test_files\sample_b.c
+  [5] test_files\sample_c.c
 
+
+========================================
+FILE: test_files\performance_dataset.c
+========================================
+
+Search Times Comparison:
+  Boyer-Moore-Horspool: 230.0000 ms
+  Brute-Force Naive   : 554.0000 ms
+
+Violation Type : TODO
+Line Number    : 3003
+Matched Code   :     // TODO: add real logic here
+----------------------------------------
+Violation Type : strcpy
+Line Number    : 3005
+Matched Code   :     strcpy(buf, "test");
+----------------------------------------
 
 ========================================
 FILE: test_files\sample.py
 ========================================
 
+Search Times Comparison:
+  Boyer-Moore-Horspool: 842.0000 ms
+  Brute-Force Naive   : 2045.0000 ms
+
 Violation Type : TODO
 Line Number    : 1
-Matched Code   : # TODO remove hardcoding
+Matched Code   : ﻿# TODO remove hardcoding
 ----------------------------------------
 Violation Type : password
 Line Number    : 3
@@ -389,6 +411,10 @@ Matched Code   : eval(user_input)
 ========================================
 FILE: test_files\sample_a.c
 ========================================
+
+Search Times Comparison:
+  Boyer-Moore-Horspool: 825.0000 ms
+  Brute-Force Naive   : 2091.0000 ms
 
 Violation Type : strcpy
 Line Number    : 7
@@ -407,6 +433,10 @@ Matched Code   :     if (x &lt; 0) goto error;  // banned: goto
 FILE: test_files\sample_b.c
 ========================================
 
+Search Times Comparison:
+  Boyer-Moore-Horspool: 841.0000 ms
+  Brute-Force Naive   : 1945.0000 ms
+
 Violation Type : strcpy
 Line Number    : 7
 Matched Code   :     strcpy(buffer, input);   // banned: strcpy
@@ -423,6 +453,10 @@ Matched Code   :     if (a &lt; 0) goto fail;   // banned: goto
 ========================================
 FILE: test_files\sample_c.c
 ========================================
+
+Search Times Comparison:
+  Boyer-Moore-Horspool: 597.0000 ms
+  Brute-Force Naive   : 1378.0000 ms
 
 Violation Type : password
 Line Number    : 4
@@ -451,27 +485,32 @@ Pattern      : "eval("
 
 Algorithm              Matches    Time(ms)    
 Horspool               833        1.0000      
-Naive                  833        1.0000      
+Naive                  833        0.0000      
 ========================================
 
 
 ======== SIMILARITY SCORES (test_files) ========
-4.2%  sample.py             &lt;-&gt;  sample_a.c          
-4.2%  sample.py             &lt;-&gt;  sample_b.c          
-9.6%  sample.py             &lt;-&gt;  sample_c.c          
-53.0%  sample_a.c            &lt;-&gt;  sample_b.c          
-26.9%  sample_a.c            &lt;-&gt;  sample_c.c          
-26.1%  sample_b.c            &lt;-&gt;  sample_c.c          
+6.5%  performance_dataset.c  &lt;-&gt;  sample.py           
+10.5%  performance_dataset.c  &lt;-&gt;  sample_a.c          
+9.8%  performance_dataset.c  &lt;-&gt;  sample_b.c          
+9.0%  performance_dataset.c  &lt;-&gt;  sample_c.c          
+28.1%  sample.py             &lt;-&gt;  sample_a.c          
+26.6%  sample.py             &lt;-&gt;  sample_b.c          
+32.8%  sample.py             &lt;-&gt;  sample_c.c          
+63.3%  sample_a.c            &lt;-&gt;  sample_b.c            *** HIGH — possible copy-paste ***
+47.2%  sample_a.c            &lt;-&gt;  sample_c.c          
+42.5%  sample_b.c            &lt;-&gt;  sample_c.c          
 =================================================
 
 ╔══════════════════════════════════════════════╗
-║  Total Violations Found : 14                 ║
+║  Total Violations Found : 16                 ║
 ╚══════════════════════════════════════════════╝
     </pre>
     
     <script>
         let files = [];
         let fileViolations = {};
+        let fileTimes = {};
         let benchmark = { horspoolTime: 0.0, naiveTime: 0.0, matches: 0 };
         let similarities = [];
         let shiftTables = {};
@@ -503,6 +542,15 @@ Naive                  833        1.0000
                 
                 fileViolations[filename] = [];
                 
+                let horspoolTime = "0.0000";
+                let naiveTime = "0.0000";
+                const timeMatch = block.match(/Search\s+Times\s+Comparison:\s*\n\s*Boyer-Moore-Horspool:\s*([\d.]+)\s*ms\s*\n\s*Brute-Force\s+Naive\s*:\s*([\d.]+)\s*ms/i);
+                if (timeMatch) {
+                    horspoolTime = timeMatch[1];
+                    naiveTime = timeMatch[2];
+                }
+                fileTimes[filename] = { horspool: horspoolTime, naive: naiveTime };
+                
                 const violationsText = block.split(/\-{40}/);
                 violationsText.forEach(vText => {
                     const typeMatch = vText.match(/Violation Type\s*:\s*(.*)/);
@@ -522,6 +570,7 @@ Naive                  833        1.0000
             // Ensure all files are in list
             files.forEach(f => {
                 if (!fileViolations[f]) fileViolations[f] = [];
+                if (!fileTimes[f]) fileTimes[f] = { horspool: "0.0000", naive: "0.0000" };
             });
             
             // 4. Benchmark
@@ -606,10 +655,18 @@ Naive                  833        1.0000
                     listHtml += `</div>`;
                 }
                 
+                const times = fileTimes[f] || { horspool: '0.0000', naive: '0.0000' };
+                
                 fileSec.innerHTML = `
                     <div class="file-header">
                         <span class="file-path">${basename}</span>
-                        <span class="file-badge ${badgeClass}">${badgeText}</span>
+                        <div style="display:flex; align-items:center; gap:0.75rem;">
+                            <span style="font-size:0.75rem; color:var(--text-muted); font-family:'Outfit', sans-serif;">
+                                BMH: <span style="color:#c084fc; font-weight:600;">${times.horspool} ms</span> &nbsp;•&nbsp; 
+                                Naive: <span style="color:#3b82f6; font-weight:600;">${times.naive} ms</span>
+                            </span>
+                            <span class="file-badge ${badgeClass}">${badgeText}</span>
+                        </div>
                     </div>
                     ${listHtml}
                 `;

@@ -1,6 +1,9 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include "horspool.h"
+#include "naive.h"
 #include "scanner.h"
 
 int scanFile(char filename[],
@@ -22,6 +25,49 @@ int scanFile(char filename[],
     fprintf(report, "\n========================================\n");
     fprintf(report, "FILE: %s\n", filename);
     fprintf(report, "========================================\n\n");
+
+    /* --- Time Comparison on test file --- */
+    fseek(fp, 0, SEEK_END);
+    long fsize = ftell(fp);
+    rewind(fp);
+
+    char *buf = (char *)malloc(fsize + 1);
+    if (buf)
+    {
+        size_t readBytes = fread(buf, 1, fsize, fp);
+        buf[readBytes] = '\0';
+        rewind(fp);
+
+        int dummyMatches[2000];
+        int iterations = 50000;
+        if (fsize > 200000)      iterations = 100;
+        else if (fsize > 50000)  iterations = 500;
+        else if (fsize > 10000)  iterations = 2000;
+        
+        clock_t t0 = clock();
+        for (int iter = 0; iter < iterations; iter++)
+        {
+            for (int i = 0; i < patternCount; i++)
+                horspoolSearchAll(buf, patterns[i], dummyMatches, 2000);
+        }
+        clock_t t1 = clock();
+
+        for (int iter = 0; iter < iterations; iter++)
+        {
+            for (int i = 0; i < patternCount; i++)
+                naiveSearchAll(buf, patterns[i], dummyMatches, 2000);
+        }
+        clock_t t2 = clock();
+
+        double hms = (double)(t1 - t0) / CLOCKS_PER_SEC * 1000.0;
+        double nms = (double)(t2 - t1) / CLOCKS_PER_SEC * 1000.0;
+
+        fprintf(report, "Search Times Comparison:\n");
+        fprintf(report, "  Boyer-Moore-Horspool: %.4f ms\n", hms);
+        fprintf(report, "  Brute-Force Naive   : %.4f ms\n\n", nms);
+
+        free(buf);
+    }
 
     char line[512];
     int  lineNo     = 1;
